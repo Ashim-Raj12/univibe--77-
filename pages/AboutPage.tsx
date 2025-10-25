@@ -22,7 +22,7 @@ const TeamMemberCard: React.FC<{ member: TeamMember }> = React.memo(({ member })
             <img src={member.avatar_url || `https://avatar.vercel.sh/${member.name}.png?text=${member.name.split(' ').map(n => n[0]).join('')}`} alt={member.name} className="w-24 h-24 rounded-full mx-auto mb-4 object-cover border-4 border-slate-100 shadow-sm" loading="lazy" decoding="async" />
             <h3 className="font-bold text-lg text-text-heading">{member.name}</h3>
             <p className="text-sm text-primary font-semibold">{member.role}</p>
-            <p className="text-sm text-text-body mt-2 h-16">{member.bio}</p>
+            <p className="text-sm text-text-body mt-2 ">{member.bio}</p>
             <div className="flex justify-center gap-4 mt-4 text-text-muted">
                 {member.linkedin_url && <a href={member.linkedin_url} target="_blank" rel="noopener noreferrer" className="hover:text-primary"><LinkedinIcon /></a>}
                 {member.twitter_url && <a href={member.twitter_url} target="_blank" rel="noopener noreferrer" className="hover:text-primary"><TwitterIcon /></a>}
