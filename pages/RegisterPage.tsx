@@ -361,7 +361,7 @@ const RegisterPage: React.FC = () => {
                                 </div>
 
                                 <select name="state" value={formData.state} onChange={handleChange} className={inputClasses} required={isStudent}>
-                                    <option value="" disabled>Select State</option>
+                                    <option value="" disabled>Home State</option>
                                     {indianStatesAndUTs.map(s => <option key={s} value={s}>{s}</option>)}
                                 </select>
                              </div>
