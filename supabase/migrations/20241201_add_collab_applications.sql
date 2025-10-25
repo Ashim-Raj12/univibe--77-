@@ -76,15 +76,6 @@ BEGIN
     SET status = 'declined', responded_at = NOW()
     WHERE post_id = (SELECT post_id FROM collab_applications WHERE id = p_application_id)
     AND id != p_application_id;
-
-    -- Insert notification for accepted applicant
-    INSERT INTO notifications (user_id, actor_id, type, entity_id)
-    VALUES (
-        (SELECT applicant_id FROM collab_applications WHERE id = p_application_id),
-        p_poster_id,
-        'collab_application_accepted',
-        p_application_id
-    );
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
@@ -97,34 +88,7 @@ BEGIN
     WHERE id = p_application_id AND post_id IN (
         SELECT id FROM collab_posts WHERE poster_id = p_poster_id
     );
-
-    -- Insert notification for declined applicant
-    INSERT INTO notifications (user_id, actor_id, type, entity_id)
-    VALUES (
-        (SELECT applicant_id FROM collab_applications WHERE id = p_application_id),
-        p_poster_id,
-        'collab_application_declined',
-        p_application_id
-    );
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Trigger function to create notification when application is submitted
-CREATE OR REPLACE FUNCTION notify_application_submitted()
-RETURNS TRIGGER AS $$
-BEGIN
-    INSERT INTO notifications (user_id, actor_id, type, entity_id)
-    VALUES (
-        (SELECT poster_id FROM collab_posts WHERE id = NEW.post_id),
-        NEW.applicant_id,
-        'collab_application_received',
-        NEW.id
-    );
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
 
--- Create trigger
-CREATE TRIGGER trigger_application_submitted
-    AFTER INSERT ON collab_applications
-    FOR EACH ROW EXECUTE FUNCTION notify_application_submitted();
