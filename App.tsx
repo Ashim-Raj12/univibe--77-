@@ -59,6 +59,7 @@ const CreateEventPage = lazy(() => import("./pages/CreateEventPage.tsx"));
 const CreateStudyGroupPage = lazy(
   () => import("./pages/CreateStudyGroupPage.tsx")
 );
+const CreateCollabPage = lazy(() => import("./pages/CreateCollabPage.tsx"));
 const CommunityMembersPage = lazy(
   () => import("./pages/CommunityMembersPage.tsx")
 );
@@ -208,6 +209,7 @@ function App() {
                     path="/create-study-group"
                     element={<CreateStudyGroupPage />}
                   />
+                  <Route path="/create-collab" element={<CreateCollabPage />} />
                   <Route
                     path="/community/:id/members"
                     element={<CommunityMembersPage />}
