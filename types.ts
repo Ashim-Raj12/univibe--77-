@@ -759,3 +759,17 @@ export interface VoucherWithdrawalRequestWithDetails
   vouchers: Voucher; // voucher details
   admin?: { name: string | null } | null; // admin profile
 }
+
+// New types for Collab Applications
+export interface CollabApplication {
+  id: number;
+  post_id: number;
+  applicant_id: string;
+  status: "pending" | "accepted" | "declined";
+  applied_at: string;
+  responded_at: string | null;
+}
+
+export interface CollabApplicationWithApplicant extends CollabApplication {
+  applicant: Profile;
+}
