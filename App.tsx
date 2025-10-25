@@ -52,6 +52,8 @@ const RoommateFinderPage = lazy(() => import("./pages/RoommateFinderPage"));
 const VibeCollabPage = lazy(() => import("./pages/VibeCollabPage"));
 const CollabPostDetailPage = lazy(() => import("./pages/CollabPostDetailPage"));
 const WalletPage = lazy(() => import("./pages/WalletPage"));
+const AddCoinsPage = lazy(() => import("./pages/AddCoinsPage"));
+const SendCoinsPage = lazy(() => import("./pages/SendCoinsPage"));
 
 // New pages for mobile modals
 const CreatePostPage = lazy(() => import("./pages/CreatePostPage"));
@@ -201,6 +203,8 @@ function App() {
                     element={<CollabPostDetailPage />}
                   />
                   <Route path="/wallet" element={<WalletPage />} />
+                  <Route path="/add-coins" element={<AddCoinsPage />} />
+                  <Route path="/send-coins" element={<SendCoinsPage />} />
 
                   {/* Mobile Modal Pages */}
                   <Route path="/create-post" element={<CreatePostPage />} />
