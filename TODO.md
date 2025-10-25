@@ -1,4 +1,5 @@
-- [x] Add home_town to formData in EditProfilePage.tsx
-- [x] Add text input for home_town in the form grid (after college, before state)
-- [x] Update handleSubmit in EditProfilePage.tsx to save home_town
-- [x] Modify ProfilePage.tsx to display home_town after college and before state
+- [x] Add gender to Profile type in types.ts
+- [x] Add gender to formData in EditProfilePage.tsx
+- [x] Add gender select input in EditProfilePage form
+- [x] Update handleSubmit in EditProfilePage.tsx to save gender
+- [x] Display gender after username in ProfilePage.tsx (green for he, pink for she)

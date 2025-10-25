@@ -46,6 +46,7 @@ const EditProfilePage: React.FC = () => {
       | "incoming_student"
       | "passed_out"
       | "exploring",
+    gender: "male" as "male" | "female",
     linkedin_url: "",
     twitter_url: "",
     github_url: "",
@@ -85,6 +86,7 @@ const EditProfilePage: React.FC = () => {
           joining_year: profile.joining_year?.toString() || "",
           hobbies_interests: profile.hobbies_interests || "",
           enrollment_status: profile.enrollment_status || "current_student",
+          gender: profile.gender || "male",
           linkedin_url: profile.linkedin_url || "",
           twitter_url: profile.twitter_url || "",
           github_url: profile.github_url || "",
@@ -248,6 +250,7 @@ const EditProfilePage: React.FC = () => {
         course: formData.course,
         home_town: formData.home_town,
         hobbies_interests: formData.hobbies_interests,
+        gender: formData.gender as any,
         linkedin_url: formData.linkedin_url || null,
         twitter_url: formData.twitter_url || null,
         github_url: formData.github_url || null,
@@ -349,7 +352,7 @@ const EditProfilePage: React.FC = () => {
               </p>
             </div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
               <label
                 className="block text-sm font-medium text-text-body mb-2"
@@ -403,6 +406,25 @@ const EditProfilePage: React.FC = () => {
                   Username available!
                 </p>
               ) : null}
+            </div>
+            <div>
+              <label
+                className="block text-sm font-medium text-text-body mb-2"
+                htmlFor="gender"
+              >
+                Gender
+              </label>
+              <select
+                id="gender"
+                name="gender"
+                value={formData.gender}
+                onChange={handleChange}
+                className={inputClasses}
+                required
+              >
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+              </select>
             </div>
           </div>
           <div>
