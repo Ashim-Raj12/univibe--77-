@@ -1,5 +1,0 @@
-- [x] Add gender to Profile type in types.ts
-- [x] Add gender to formData in EditProfilePage.tsx
-- [x] Add gender select input in EditProfilePage form
-- [x] Update handleSubmit in EditProfilePage.tsx to save gender
-- [x] Display gender after username in ProfilePage.tsx (green for he, pink for she)

@@ -679,8 +679,8 @@ const ProfilePage: React.FC = () => {
               )}
               {profile.gender && (
                 <span
-                  className={`inline-block px-2 py-1 text-xs font-semibold text-white rounded-full ${
-                    profile.gender === "male" ? "bg-green-600" : "bg-pink-600"
+                  className={`inline-block px-2 py-0.5 text-sm font-normal text-white rounded-lg ${
+                    profile.gender === "male" ? "bg-green-500" : "bg-pink-500"
                   }`}
                 >
                   {profile.gender === "male" ? "He" : "She"}
