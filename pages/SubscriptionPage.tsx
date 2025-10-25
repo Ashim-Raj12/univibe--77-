@@ -314,7 +314,7 @@ const SubscriptionPage: React.FC = () => {
             back later.
           </p>
         ) : (
-          <div className="grid grid-cols-1 max-w-4xl mx-auto items-center">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-5xl mx-auto items-center">
             {subscriptions.map((plan, index) => (
               <SubscriptionCard
                 key={plan.id}

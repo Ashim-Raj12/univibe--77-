@@ -1,3 +1,4 @@
-- [x] Update grid layout in SubscriptionPage.tsx to 2 columns on large screens
-- [x] Change grid alignment to items-center for vertical centering
-- [x] Reduce card padding from p-8 to p-6 in SubscriptionCard component
+- [x] Add home_town to formData in EditProfilePage.tsx
+- [x] Add text input for home_town in the form grid (after college, before state)
+- [x] Update handleSubmit in EditProfilePage.tsx to save home_town
+- [x] Modify ProfilePage.tsx to display home_town after college and before state

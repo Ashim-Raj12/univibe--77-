@@ -19,6 +19,7 @@ export interface Profile {
   email?: string | null;
   avatar_url: string | null;
   college: string | null;
+  home_town: string | null;
   state: string | null;
   bio: string | null;
   course: string | null;
