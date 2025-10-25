@@ -56,7 +56,12 @@ const WalletPage = lazy(() => import("./pages/WalletPage"));
 // New pages for mobile modals
 const CreatePostPage = lazy(() => import("./pages/CreatePostPage"));
 const CreateEventPage = lazy(() => import("./pages/CreateEventPage.tsx"));
-const CommunityMembersPage = lazy(() => import("./pages/CommunityMembersPage.tsx"));
+const CreateStudyGroupPage = lazy(
+  () => import("./pages/CreateStudyGroupPage.tsx")
+);
+const CommunityMembersPage = lazy(
+  () => import("./pages/CommunityMembersPage.tsx")
+);
 const VerificationPage = lazy(() => import("./pages/VerificationPage.tsx"));
 const ParentVerificationPage = lazy(
   () => import("./pages/ParentVerificationPage.tsx")
@@ -199,6 +204,10 @@ function App() {
                   {/* Mobile Modal Pages */}
                   <Route path="/create-post" element={<CreatePostPage />} />
                   <Route path="/create-event" element={<CreateEventPage />} />
+                  <Route
+                    path="/create-study-group"
+                    element={<CreateStudyGroupPage />}
+                  />
                   <Route
                     path="/community/:id/members"
                     element={<CommunityMembersPage />}
