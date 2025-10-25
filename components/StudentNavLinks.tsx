@@ -13,6 +13,7 @@ interface StudentNavLinksProps {
   isAdmin: boolean;
   onSignOut: () => void;
   unreadMessagesCount?: number;
+  pendingGroupInvitesCount?: number;
 }
 
 const StudentNavLinks: React.FC<StudentNavLinksProps> = ({
@@ -25,6 +26,7 @@ const StudentNavLinks: React.FC<StudentNavLinksProps> = ({
   isAdmin,
   onSignOut,
   unreadMessagesCount = 0,
+  pendingGroupInvitesCount = 0,
 }) => {
   const isPro =
     subscription?.status === "active" &&
@@ -114,7 +116,14 @@ const StudentNavLinks: React.FC<StudentNavLinksProps> = ({
             className={navLinkClasses}
             onClick={closeMobileMenu}
           >
-            Study Hub
+            <span className="flex items-center gap-2">
+              <span>Study Hub</span>
+              {pendingGroupInvitesCount > 0 && (
+                <span className="text-xs font-bold text-white bg-red-600 px-2 py-0.5 rounded-full">
+                  {pendingGroupInvitesCount}
+                </span>
+              )}
+            </span>
           </NavLink>
 
           <NavLink

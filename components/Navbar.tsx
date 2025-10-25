@@ -89,6 +89,9 @@ const NotificationItem: React.FC<{
     case "report_resolved":
       content = <>Your recent report has been reviewed and resolved.</>;
       break;
+    case "new_group_invite":
+      content = <>{actorNameWithBadge} invited you to join a study group.</>;
+      break;
     default:
       content = <>New notification from {actorNameWithBadge}</>;
   }
@@ -446,6 +449,7 @@ const Navbar: React.FC = () => {
   const [isMobileView, setIsMobileView] = useState(window.innerWidth < 768);
   const [isMobileNotifOpen, setIsMobileNotifOpen] = useState(false);
   const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
+  const [pendingGroupInvitesCount, setPendingGroupInvitesCount] = useState(0);
 
   const notifRef = useRef<HTMLDivElement>(null);
   const mobileNotifRef = useRef<HTMLDivElement>(null);
@@ -508,6 +512,16 @@ const Navbar: React.FC = () => {
     setUnreadMessagesCount(count ?? 0);
   }, [user]);
 
+  const fetchPendingGroupInvitesCount = useCallback(async () => {
+    if (!user) return;
+    const { count } = await supabase
+      .from("study_group_invites")
+      .select("*", { count: "exact", head: true })
+      .eq("invitee_id", user.id)
+      .eq("status", "pending");
+    setPendingGroupInvitesCount(count ?? 0);
+  }, [user]);
+
   const fetchNotifications = useCallback(async () => {
     if (!user) return;
     setNotifLoading(true);
@@ -533,7 +547,8 @@ const Navbar: React.FC = () => {
   useEffect(() => {
     fetchNotificationCount();
     fetchUnreadMessagesCount();
-  }, [fetchNotificationCount]);
+    fetchPendingGroupInvitesCount();
+  }, [fetchNotificationCount, fetchPendingGroupInvitesCount]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -598,6 +613,31 @@ const Navbar: React.FC = () => {
     };
   }, [user, fetchUnreadMessagesCount]);
 
+  // Realtime subscription for pending group invites count
+  useEffect(() => {
+    if (!user) return;
+    const invitesChannel = supabase
+      .channel(`user-invites-${user.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "study_group_invites",
+          filter: `invitee_id=eq.${user.id}`,
+        },
+        (payload) => {
+          // Re-fetch pending invites count on any change
+          fetchPendingGroupInvitesCount();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(invitesChannel);
+    };
+  }, [user, fetchPendingGroupInvitesCount]);
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (notifRef.current && !notifRef.current.contains(event.target as Node))
@@ -644,6 +684,9 @@ const Navbar: React.FC = () => {
         break;
       case "new_message":
         link = `/chat/${notification.actor_id}`;
+        break;
+      case "new_group_invite":
+        link = `/study-hub`;
         break;
       default:
         link = `/profile/${user?.id}`;
@@ -772,6 +815,7 @@ const Navbar: React.FC = () => {
               isAdmin={isAdmin}
               onSignOut={handleSignOut}
               unreadMessagesCount={unreadMessagesCount}
+              pendingGroupInvitesCount={pendingGroupInvitesCount}
             />
           )}
         </div>
