@@ -245,6 +245,20 @@ const CollabPostDetailPage = () => {
       toast.error(error.message);
     } else {
       toast.success("Application submitted!");
+      // Immediately update local state to show "Applied"
+      setHasApplied(true);
+      setMyApplication({
+        id: -1, // Temporary ID
+        post_id: postId,
+        applicant_id: user.id,
+        status: "pending",
+        applied_at: new Date().toISOString(),
+        applicant: {
+          id: user.id,
+          name: (profile as any)?.name || "You",
+          has_pro_badge: (profile as any)?.has_pro_badge || false,
+        },
+      });
     }
     setActionLoading(false);
   };
@@ -628,7 +642,9 @@ const CollabPostDetailPage = () => {
                       : "text-blue-600"
                   }`}
                 >
-                  Application {myApplication.status}
+                  {myApplication.status === "pending"
+                    ? "Applied"
+                    : `Application ${myApplication.status}`}
                 </p>
                 {myApplication.status === "accepted" && (
                   <p className="text-sm text-text-muted mt-2">
