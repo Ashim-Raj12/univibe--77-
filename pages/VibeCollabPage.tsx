@@ -11,41 +11,64 @@ const MarketplaceView: React.FC<{ onUpdate: () => void }> = ({ onUpdate }) => {
   const [posts, setPosts] = useState<CollabPostWithProfiles[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchOpenPosts = async () => {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from("collab_posts")
-        .select("*, poster:poster_id(*)")
-        .eq("status", "open")
-        .order("created_at", { ascending: false });
+  const fetchOpenPosts = useCallback(async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("collab_posts")
+      .select("*, poster:poster_id(*)")
+      .eq("status", "open")
+      .order("created_at", { ascending: false });
 
-      if (data) {
-        const posterIds = [...new Set(data.map((p) => p.poster_id))];
-        if (posterIds.length > 0) {
-          const { data: proSubs } = await supabase
-            .from("user_subscriptions")
-            .select("user_id, subscriptions:subscription_id(name)")
-            .in("user_id", posterIds)
-            .eq("status", "active");
-          const proUserIds = new Set(
-            (proSubs || [])
-              .filter((s) => s.subscriptions?.name?.toUpperCase() === "PRO")
-              .map((s) => s.user_id)
-          );
-          const enrichedPosts = data.map((p) => ({
-            ...p,
-            poster: { ...p.poster, has_pro_badge: proUserIds.has(p.poster_id) },
-          }));
-          setPosts(enrichedPosts as any);
-        } else {
-          setPosts(data as any);
-        }
+    if (data) {
+      const posterIds = [...new Set(data.map((p) => p.poster_id))];
+      if (posterIds.length > 0) {
+        const { data: proSubs } = await supabase
+          .from("user_subscriptions")
+          .select("user_id, subscriptions:subscription_id(name)")
+          .in("user_id", posterIds)
+          .eq("status", "active");
+        const proUserIds = new Set(
+          (proSubs || [])
+            .filter((s) => s.subscriptions?.name?.toUpperCase() === "PRO")
+            .map((s) => s.user_id)
+        );
+        const enrichedPosts = data.map((p) => ({
+          ...p,
+          poster: { ...p.poster, has_pro_badge: proUserIds.has(p.poster_id) },
+        }));
+        setPosts(enrichedPosts as any);
+      } else {
+        setPosts(data as any);
       }
-      setLoading(false);
-    };
+    }
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
     fetchOpenPosts();
-  }, [onUpdate]);
+  }, [fetchOpenPosts, onUpdate]);
+
+  useEffect(() => {
+    const channel = supabase
+      .channel("collab-posts-marketplace")
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "collab_posts",
+          filter: `status=eq.open`,
+        },
+        () => {
+          fetchOpenPosts();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [fetchOpenPosts]);
 
   if (loading)
     return (
