@@ -7,6 +7,7 @@ import { Profile } from "../types";
 import ConfirmationModal from "../components/ConfirmationModal";
 import { indianStatesAndUTs } from "../data/states";
 import { toast } from "../components/Toast";
+import ProfileCompletionAlert from "../components/ProfileCompletionAlert";
 
 const debounce = <F extends (...args: any[]) => any>(
   func: F,
@@ -316,6 +317,7 @@ const EditProfilePage: React.FC = () => {
 
   return (
     <>
+      <ProfileCompletionAlert />
       <div className="max-w-4xl mx-auto animate-fade-in-up">
         <h1 className="text-3xl font-bold text-text-heading mb-6">
           Edit Profile
