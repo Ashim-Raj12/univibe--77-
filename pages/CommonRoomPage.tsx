@@ -6,7 +6,6 @@ import { useAuth } from "../hooks/useAuth";
 import PostCardSkeleton from "../components/PostCardSkeleton";
 import PostForm from "../components/PostForm";
 import Spinner from "../components/Spinner";
-import ProfileCompletionAlert from "../components/ProfileCompletionAlert";
 
 const POSTS_PER_PAGE = 10;
 
@@ -200,7 +199,6 @@ const CommonRoomPage: React.FC = () => {
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
-      <ProfileCompletionAlert />
       <h1 className="text-3xl font-bold text-text-heading">
         Welcome to the Common Room,{" "}
         {profile?.name ? profile.name.split(" ")[0] : "User"}!

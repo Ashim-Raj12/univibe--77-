@@ -8,7 +8,6 @@ import { useAuth } from "../hooks/useAuth";
 import PostCardSkeleton from "../components/PostCardSkeleton";
 import PostForm from "../components/PostForm";
 import { profilesCache } from "../services/cache";
-import ProfileCompletionAlert from "../components/ProfileCompletionAlert";
 
 const POSTS_PER_PAGE = 10;
 
@@ -269,7 +268,6 @@ const HomePage: React.FC = () => {
 
   return (
     <>
-      <ProfileCompletionAlert />
       <div className="grid lg:grid-cols-3 gap-8 items-start">
         <div className="lg:col-span-2 space-y-6">
           <h1 className="text-3xl font-bold text-text-heading">

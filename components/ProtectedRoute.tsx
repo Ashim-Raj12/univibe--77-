@@ -5,6 +5,7 @@ import Navbar from "./Navbar";
 import Spinner from "./Spinner";
 import OnboardingTour, { TourStep } from "./OnboardingTour";
 import UpgradeToPro from "./UpgradeToPro";
+import ProfileCompletionAlert from "./ProfileCompletionAlert";
 import { supabase } from "../services/supabase";
 import {
   getRoleFromProfile,
@@ -219,6 +220,7 @@ const ProtectedRoute: React.FC = () => {
                 : "container mx-auto max-w-7xl px-4 py-2 md:py-8 sm:px-6 lg:px-8"
             }`}
           >
+            {!isChatPage && <ProfileCompletionAlert />}
             {renderContent()}
           </div>
         </main>

@@ -5,7 +5,6 @@ import { useNavigate, Link } from "react-router-dom";
 import Spinner from "../components/Spinner";
 import { Profile } from "../types";
 import ConfirmationModal from "../components/ConfirmationModal";
-import ProfileCompletionAlert from "../components/ProfileCompletionAlert";
 
 const debounce = <F extends (...args: any[]) => any>(
   func: F,
@@ -201,7 +200,6 @@ const ParentProfilePage: React.FC = () => {
 
   return (
     <>
-      <ProfileCompletionAlert />
       <div className="max-w-4xl mx-auto animate-fade-in-up">
         <h1 className="text-3xl font-bold text-text-heading mb-6">
           Edit Parent Profile
