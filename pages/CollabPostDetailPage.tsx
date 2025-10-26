@@ -373,6 +373,35 @@ const CollabPostDetailPage = () => {
     }
   };
 
+  const handleDeletePost = async () => {
+    if (!user || !post || post.poster_id !== user.id) return;
+    if (post.status !== "open" && post.status !== "cancelled") return;
+    if (
+      !window.confirm(
+        "Are you sure you want to delete this post? This action cannot be undone."
+      )
+    )
+      return;
+
+    setActionLoading(true);
+    try {
+      const { error } = await supabase
+        .from("collab_posts")
+        .delete()
+        .eq("id", postId);
+
+      if (error) throw error;
+
+      toast.success("Post deleted successfully!");
+      // Redirect to collab page
+      window.location.href = "/vibe-collab";
+    } catch (err: any) {
+      toast.error(err.message || "Failed to delete post.");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   if (loading)
     return (
       <div className="flex justify-center p-8">
@@ -431,6 +460,16 @@ const CollabPostDetailPage = () => {
               {post.task_type.replace("_", " ")}
             </span>
           </p>
+          {isOwner &&
+            (post.status === "open" || post.status === "cancelled") && (
+              <button
+                onClick={handleDeletePost}
+                disabled={actionLoading}
+                className="bg-red-500 text-white px-4 py-2 rounded-lg font-semibold disabled:opacity-50 mt-4"
+              >
+                {actionLoading ? <Spinner size="sm" /> : "Delete Post"}
+              </button>
+            )}
         </div>
 
         <div className="mt-4">

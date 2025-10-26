@@ -105,7 +105,10 @@ export interface Notification {
     | "parent_verification_rejected"
     | "report_resolved"
     | "voucher_request_completed"
-    | "voucher_request_rejected";
+    | "voucher_request_rejected"
+    | "collab_application_received"
+    | "collab_application_accepted"
+    | "collab_application_declined";
   entity_id: string | number | null;
   is_read: boolean;
   created_at: string;
