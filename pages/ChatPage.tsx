@@ -154,7 +154,9 @@ const ChatMessage: React.FC<{
                 </div>
               )}
               {mainContent && (
-                <p className="whitespace-pre-wrap break-words">{mainContent}</p>
+                <p className="whitespace-pre-wrap break-words overflow-wrap-anywhere">
+                  {mainContent}
+                </p>
               )}
               {message.file_url && message.file_type && (
                 <FileRenderer
@@ -912,7 +914,7 @@ const ChatPage: React.FC = () => {
     `${Math.floor(time / 60)}:${(time % 60).toString().padStart(2, "0")}`;
 
   return (
-    <div className="flex flex-col h-full max-w-3xl mx-auto bg-card sm:rounded-2xl shadow-soft sm:border border-slate-200/50">
+    <div className="flex flex-col h-full max-w-3xl mx-auto bg-card sm:rounded-2xl shadow-soft sm:border border-slate-200/50 overflow-x-hidden">
       <header className="p-4 border-b border-slate-200 flex items-center justify-between gap-3">
         <div className="flex items-center gap-3 flex-1 min-w-0">
           <Link
