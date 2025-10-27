@@ -140,7 +140,7 @@ const ChatMessage: React.FC<{
         >
           <div className="relative">
             <div
-              className={`rounded-xl shadow-sm ${bubbleTailClasses} ${bubblePadding}`}
+              className={`rounded-xl shadow-sm ${bubbleTailClasses} ${bubblePadding} overflow-hidden`}
               onClick={handleMessageClick}
             >
               {replyInfo && (
@@ -150,11 +150,11 @@ const ChatMessage: React.FC<{
                   }`}
                 >
                   <p className="font-bold text-xs">{replyInfo.senderName}</p>
-                  <p className="text-xs truncate">{replyInfo.content}</p>
+                  <p className="text-xs break-all min-w-0">{replyInfo.content}</p>
                 </div>
               )}
               {mainContent && (
-                <p className="whitespace-pre-wrap break-words overflow-wrap-anywhere">
+                <p className="whitespace-pre-wrap break-all min-w-0">
                   {mainContent}
                 </p>
               )}
@@ -1030,7 +1030,8 @@ const ChatPage: React.FC = () => {
                   ? "Editing Message"
                   : `Replying to ${replyingTo?.senderName}`}
               </p>
-              <p className="text-text-body truncate max-w-xs">
+              {/* FIX APPLIED HERE: Replaced 'truncate' with 'break-all min-w-0' */}
+              <p className="text-text-body break-all min-w-0 max-w-xs">
                 {editingMessage
                   ? parseReply(editingMessage.content).mainContent
                   : replyingTo?.content}
