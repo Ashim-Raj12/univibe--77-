@@ -11,6 +11,29 @@ const REPLY_PREFIX = "[REPLY::";
 const REPLY_SUFFIX = "::REPLY]";
 const REPLY_REGEX = /^\[REPLY::(.*?)::REPLY\](.*)$/s;
 
+// Linkify function to detect and make URLs clickable
+const linkify = (text: string) => {
+  const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+)/g;
+  const parts = text.split(urlRegex);
+  return parts.map((part, index) => {
+    if (urlRegex.test(part)) {
+      const href = part.startsWith("www.") ? `https://${part}` : part;
+      return (
+        <a
+          key={index}
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-500 underline hover:text-blue-700"
+        >
+          {part}
+        </a>
+      );
+    }
+    return part;
+  });
+};
+
 const formatReplyContent = (
   replyInfo: ReplyInfo,
   mainContent: string
@@ -111,7 +134,7 @@ const CommentItem: React.FC<{
           )}
           {mainContent && (
             <p className="text-text-body text-sm whitespace-pre-wrap break-all mt-1">
-              {displayContent}
+              {linkify(displayContent)}
             </p>
           )}
           {isLongComment && (

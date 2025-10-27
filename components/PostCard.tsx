@@ -10,6 +10,29 @@ import Spinner from "./Spinner";
 import VerifiedBadge from "./VerifiedBadge";
 import ReportModal from "./ReportModal";
 
+// Linkify function to detect and make URLs clickable
+const linkify = (text: string) => {
+  const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+)/g;
+  const parts = text.split(urlRegex);
+  return parts.map((part, index) => {
+    if (urlRegex.test(part)) {
+      const href = part.startsWith("www.") ? `https://${part}` : part;
+      return (
+        <a
+          key={index}
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-500 underline hover:text-blue-700"
+        >
+          {part}
+        </a>
+      );
+    }
+    return part;
+  });
+};
+
 interface PostCardProps {
   post: PostWithProfile;
   onPostDeleted: (postId: number) => void;
@@ -309,7 +332,7 @@ const PostCard: React.FC<PostCardProps> = ({
         <>
           {post.content && (
             <p className="my-4 text-text-body whitespace-pre-wrap break-words leading-relaxed">
-              {post.content}
+              {linkify(post.content)}
             </p>
           )}
 

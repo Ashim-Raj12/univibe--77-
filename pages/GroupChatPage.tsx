@@ -24,6 +24,29 @@ const REPLY_PREFIX = "[REPLY::";
 const REPLY_SUFFIX = "::REPLY]";
 const REPLY_REGEX = /^\[REPLY::(.*?)::REPLY\](.*)$/s;
 
+// Linkify function to detect and make URLs clickable
+const linkify = (text: string) => {
+  const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+)/g;
+  const parts = text.split(urlRegex);
+  return parts.map((part, index) => {
+    if (urlRegex.test(part)) {
+      const href = part.startsWith("www.") ? `https://${part}` : part;
+      return (
+        <a
+          key={index}
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-white-500 underline hover:text-white  -700"
+        >
+          {part}
+        </a>
+      );
+    }
+    return part;
+  });
+};
+
 function findLastIndex<T>(
   array: T[],
   predicate: (value: T, index: number, obj: T[]) => unknown
@@ -167,7 +190,7 @@ const ChatMessage: React.FC<{
               )}
               {mainContent && (
                 <p className="whitespace-pre-wrap break-all min-w-0">
-                  {mainContent}
+                  {linkify(mainContent)}
                 </p>
               )}
               {message.file_url && message.file_type && (
