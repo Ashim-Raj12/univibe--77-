@@ -150,7 +150,9 @@ const ChatMessage: React.FC<{
                   }`}
                 >
                   <p className="font-bold text-xs">{replyInfo.senderName}</p>
-                  <p className="text-xs break-all min-w-0">{replyInfo.content}</p>
+                  <p className="text-xs break-all min-w-0">
+                    {replyInfo.content}
+                  </p>
                 </div>
               )}
               {mainContent && (

@@ -920,7 +920,7 @@ const GroupChatPage: React.FC = () => {
 
   return (
     <div className="flex h-full max-w-6xl mx-auto">
-      <div className="flex flex-col flex-1 bg-card rounded-2xl shadow-soft border border-slate-200/50">
+      <div className="flex flex-col flex-1 bg-card rounded-2xl shadow-soft border border-slate-200/50 overflow-x-hidden">
         <header className="p-4 border-b border-slate-200 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3 flex-1 min-w-0">
             <button
