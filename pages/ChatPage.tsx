@@ -724,13 +724,14 @@ const ChatPage: React.FC = () => {
     }
   };
 
-  const handlePointerMove = (e: PointerEvent) => {
-    const deltaX = recordingStartXRef.current - e.clientX;
+  const handleTouchMove = (e: TouchEvent) => {
+    const touch = e.touches[0];
+    const deltaX = recordingStartXRef.current - touch.clientX;
     setIsCancelZone(deltaX > 80);
   };
 
   const stopRecording = (cancel = false) => {
-    document.removeEventListener("pointermove", handlePointerMove);
+    document.removeEventListener("touchmove", handleTouchMove);
     cancelRecordingRef.current = cancel;
     mediaRecorderRef.current?.stop();
     setIsRecording(false);
@@ -738,12 +739,13 @@ const ChatPage: React.FC = () => {
     if (recordingTimerRef.current) clearInterval(recordingTimerRef.current);
   };
 
-  const handlePointerUp = () => stopRecording(isCancelZone);
+  const handleTouchEnd = () => stopRecording(isCancelZone);
 
-  const startRecording = async (e: React.PointerEvent<HTMLButtonElement>) => {
+  const startRecording = async (e: React.TouchEvent<HTMLButtonElement>) => {
     e.preventDefault();
     if (isRecording) return;
-    recordingStartXRef.current = e.clientX;
+    const touch = e.touches[0];
+    recordingStartXRef.current = touch.clientX;
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -773,8 +775,8 @@ const ChatPage: React.FC = () => {
       };
       recorder.start();
 
-      document.addEventListener("pointermove", handlePointerMove);
-      document.addEventListener("pointerup", handlePointerUp, { once: true });
+      document.addEventListener("touchmove", handleTouchMove);
+      document.addEventListener("touchend", handleTouchEnd, { once: true });
     } catch (error) {
       alert(
         "Microphone access is required. Please enable it in browser settings."
@@ -1273,8 +1275,8 @@ const ChatPage: React.FC = () => {
             ) : (
               <button
                 type="button"
-                onPointerDown={startRecording}
-                className="p-3 rounded-lg flex-shrink-0 transition-colors text-white bg-primary hover:bg-primary-focus active:scale-95"
+                onTouchStart={startRecording}
+                className="p-3 rounded-lg flex-shrink-0 transition-colors text-white bg-primary hover:bg-primary-focus active:scale-95 touch-manipulation"
                 title="Hold to record voice note"
                 style={{ touchAction: "none" }}
               >
