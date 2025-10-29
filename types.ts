@@ -632,9 +632,10 @@ export interface CollabMessage {
   id: number;
   post_id: number;
   sender_id: string;
-  content: string;
+  content: string | null;
   file_url: string | null;
   file_type: string | null;
+  file_name: string | null;
   created_at: string;
 }
 

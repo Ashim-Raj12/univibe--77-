@@ -226,6 +226,7 @@ interface FileRendererProps {
   fileName?: string | null;
   fromBucket: "chat-files" | "community-files";
   isSender?: boolean;
+  allowCustomDownload?: boolean;
 }
 
 const FileRenderer: React.FC<FileRendererProps> = ({
@@ -234,6 +235,7 @@ const FileRenderer: React.FC<FileRendererProps> = ({
   fileName,
   fromBucket,
   isSender = false,
+  allowCustomDownload = false,
 }) => {
   const [url, setUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -306,14 +308,45 @@ const FileRenderer: React.FC<FileRendererProps> = ({
     fileName ||
     filePath.split("/").pop()?.split("_").slice(1).join("_") ||
     "Download File";
+
+  const handleDownload = async () => {
+    if (!url) return;
+
+    if (allowCustomDownload) {
+      const customName = prompt("Enter custom filename:", displayFileName);
+      if (!customName) return;
+
+      try {
+        const response = await fetch(url);
+        const blob = await response.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = blobUrl;
+        link.download = customName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(blobUrl);
+      } catch (error) {
+        console.error("Download failed:", error);
+      }
+    } else {
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = displayFileName;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  };
+
   return (
-    <a
-      href={url}
-      target="_blank"
-      rel="noopener noreferrer"
-      download={displayFileName}
+    <button
+      onClick={handleDownload}
       title={displayFileName}
-      className="mt-2 flex items-center gap-2 bg-slate-300/50 p-2 rounded-lg hover:bg-slate-300/80 transition-colors"
+      className="mt-2 flex items-center gap-2 bg-slate-300/50 p-2 rounded-lg hover:bg-slate-300/80 transition-colors cursor-pointer"
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -330,7 +363,7 @@ const FileRenderer: React.FC<FileRendererProps> = ({
         />
       </svg>
       <span className="truncate text-sm">{displayFileName}</span>
-    </a>
+    </button>
   );
 };
 
