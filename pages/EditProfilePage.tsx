@@ -69,12 +69,13 @@ const EditProfilePage: React.FC = () => {
   const [allColleges, setAllColleges] = useState<string[]>([]);
   const [collegesLoading, setCollegesLoading] = useState(true);
   const collegeDropdownRef = useRef<HTMLDivElement>(null);
+  const [formInitialized, setFormInitialized] = useState(false);
 
   useEffect(() => {
     if (!authLoading) {
       if (!profile || profile.enrollment_status === "parent") {
         navigate("/home", { replace: true });
-      } else {
+      } else if (!formInitialized) {
         setFormData({
           name: profile.name || "",
           username: profile.username || "",
@@ -93,10 +94,11 @@ const EditProfilePage: React.FC = () => {
         });
         setPreview(profile.avatar_url);
         setCollegeInput(profile.college || "");
+        setFormInitialized(true);
         setPageLoading(false);
       }
     }
-  }, [authLoading, profile, navigate]);
+  }, [authLoading, profile, navigate, formInitialized]);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const checkUsername = useCallback(
