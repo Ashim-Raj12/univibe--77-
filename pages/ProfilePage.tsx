@@ -414,8 +414,11 @@ const ProfilePage: React.FC = () => {
 
   const handleEditProfileClick = () => {
     if (isOwner) {
-      if (profile?.enrollment_status === "parent") {
+      const role = getRoleFromProfile(currentUserProfile);
+      if (role === "parent") {
         navigate("/edit-parent-profile");
+      } else if (role === "faculty") {
+        navigate("/edit-faculty-profile");
       } else {
         navigate("/edit-profile");
       }

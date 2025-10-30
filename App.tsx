@@ -21,6 +21,12 @@ const HomePage = lazy(() => import("./pages/HomePage"));
 const CommonRoomPage = lazy(() => import("./pages/CommonRoomPage"));
 const ProfilePage = lazy(() => import("./pages/ProfilePage"));
 const EditProfilePage = lazy(() => import("./pages/EditProfilePage")); // New Page
+const EditFacultyProfilePage = lazy(
+  () => import("./pages/EditFacultyProfilePage")
+);
+const FacultyProfilePage = lazy(() => import("./pages/FacultyProfilePage"));
+const FacultyListPage = lazy(() => import("./pages/FacultyListPage"));
+const FacultyLoginPage = lazy(() => import("./pages/FacultyLoginPage"));
 const ParentProfilePage = lazy(() => import("./pages/ParentProfilePage"));
 const DirectoryPage = lazy(() => import("./pages/DirectoryPage"));
 const SuggestionsPage = lazy(() => import("./pages/SuggestionsPage"));
@@ -47,6 +53,10 @@ const CampusTourPage = lazy(() => import("./pages/CampusTourPage")); // New Page
 const DownloadAppPage = lazy(() => import("./pages/DownloadAppPage")); // New Page
 const DoubtSessionPage = lazy(() => import("./pages/DoubtSessionPage")); // New Page
 const RoommateFinderPage = lazy(() => import("./pages/RoommateFinderPage"));
+const MyConsultationsPage = lazy(() => import("./pages/MyConsultationsPage"));
+const FacultyCommonRoomPage = lazy(
+  () => import("./pages/faculty/FacultyCommonRoom")
+);
 
 // VibeCollab Pages
 const VibeCollabPage = lazy(() => import("./pages/VibeCollabPage"));
@@ -149,6 +159,7 @@ function App() {
               <Routes>
                 <Route path="/" element={<LandingPage />} />
                 <Route path="/login" element={<LoginPage />} />
+                <Route path="/faculty-login" element={<FacultyLoginPage />} />
                 <Route path="/register" element={<RegisterPage />} />
                 <Route
                   path="/forgot-password"
@@ -164,6 +175,12 @@ function App() {
                   <Route path="/common-room" element={<CommonRoomPage />} />
                   <Route path="/profile/:id" element={<ProfilePage />} />
                   <Route path="/edit-profile" element={<EditProfilePage />} />
+                  <Route
+                    path="/edit-faculty-profile"
+                    element={<EditFacultyProfilePage />}
+                  />
+                  <Route path="/faculty/:id" element={<FacultyProfilePage />} />
+                  <Route path="/faculty" element={<FacultyListPage />} />
                   <Route
                     path="/edit-parent-profile"
                     element={<ParentProfilePage />}
@@ -188,6 +205,14 @@ function App() {
                   <Route
                     path="/doubt-session/:id"
                     element={<DoubtSessionPage />}
+                  />
+                  <Route
+                    path="/my-consultations"
+                    element={<MyConsultationsPage />}
+                  />
+                  <Route
+                    path="/faculty-common-room"
+                    element={<FacultyCommonRoomPage />}
                   />
 
                   <Route path="/about" element={<AboutPage />} />

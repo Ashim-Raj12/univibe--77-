@@ -13,6 +13,7 @@ import Spinner from "./Spinner";
 import VerifiedBadge from "./VerifiedBadge";
 import ParentNavLinks from "./ParentNavLinks";
 import StudentNavLinks from "./StudentNavLinks";
+import FacultyNavLinks from "./FacultyNavLink";
 import { getRoleFromProfile } from "../pages/ProfilePage";
 import WebsiteLogo from "./WebsiteLogo";
 import VibeCoinLogo from "./VibeCoinLogo";
@@ -22,6 +23,7 @@ const NotificationItem: React.FC<{
   onClick: () => void;
 }> = ({ notification, onClick }) => {
   const { user } = useAuth();
+  let link = "#";
   let content: React.ReactNode;
   const actorProfile = notification.actor;
 
@@ -91,6 +93,32 @@ const NotificationItem: React.FC<{
       break;
     case "new_group_invite":
       content = <>{actorNameWithBadge} invited you to join a study group.</>;
+      break;
+    case "collab_application_received":
+      content = (
+        <>
+          <strong>{actorProfile?.name}</strong> sent you a collab application.
+        </>
+      );
+      link = `/collab/${notification.entity_id}`;
+      break;
+    case "collab_application_accepted":
+      content = (
+        <>
+          <strong>{actorProfile?.name}</strong> accepted your collab
+          application.
+        </>
+      );
+      link = `/collab/${notification.entity_id}`;
+      break;
+    case "collab_application_declined":
+      content = (
+        <>
+          <strong>{actorProfile?.name}</strong> declined your collab
+          application.
+        </>
+      );
+      link = `/collab/${notification.entity_id}`;
       break;
     default:
       content = <>New notification from {actorNameWithBadge}</>;
@@ -688,6 +716,15 @@ const Navbar: React.FC = () => {
       case "new_group_invite":
         link = `/study-hub`;
         break;
+      case "collab_application_received":
+        link = `/collab/${notification.entity_id}`;
+        break;
+      case "collab_application_accepted":
+        link = `/collab/${notification.entity_id}`;
+        break;
+      case "collab_application_declined":
+        link = `/collab/${notification.entity_id}`;
+        break;
       default:
         link = `/profile/${user?.id}`;
     }
@@ -795,8 +832,17 @@ const Navbar: React.FC = () => {
           <span>UniVibe</span>
         </Link>
         <div className="flex-grow overflow-y-auto">
-          {isParent ? (
+          {profile?.enrollment_status === "parent" ? (
             <ParentNavLinks
+              isMobile={isMobileView}
+              navLinkClasses={navLinkClasses}
+              closeMobileMenu={() => setIsMobileSidebarOpen(false)}
+              subscription={subscription}
+              profile={profile}
+              onSignOut={handleSignOut}
+            />
+          ) : profile?.enrollment_status === "faculty" ? (
+            <FacultyNavLinks
               isMobile={isMobileView}
               navLinkClasses={navLinkClasses}
               closeMobileMenu={() => setIsMobileSidebarOpen(false)}

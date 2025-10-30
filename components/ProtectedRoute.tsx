@@ -129,7 +129,14 @@ const ProtectedRoute: React.FC = () => {
     "/profile",
     "/chat",
     "/feedback",
-    "/edit-profile",
+    "/edit-faculty-profile",
+    "/faculty-common-room",
+    "/faculty",
+    "/my-consultations",
+    "/wallet",
+    "/add-coins",
+    "/send-coins",
+    "/about-us",
     "/subscriptions",
   ];
   const studentBlockedPaths = ["/common-room", "/edit-parent-profile"];

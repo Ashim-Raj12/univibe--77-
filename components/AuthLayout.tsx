@@ -1,10 +1,11 @@
+import React from "react";
 
-import React from 'react';
-
-// This is a placeholder component to fix the empty file error.
-// It is not currently used in the application layout for login/register pages.
 const AuthLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    return <>{children}</>;
+  return (
+    <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
+      <div className="w-full max-w-lg">{children}</div>
+    </div>
+  );
 };
 
 export default AuthLayout;
