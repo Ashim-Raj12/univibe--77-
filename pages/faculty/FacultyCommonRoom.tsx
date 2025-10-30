@@ -16,7 +16,7 @@ const FacultyCommonRoom: React.FC = () => {
     const [newPostContent, setNewPostContent] = useState('');
     const [submitting, setSubmitting] = useState(false);
 
-    // Check if the current user is faculty
+    // Restrict non-faculty users
     if (profile?.enrollment_status !== 'faculty') {
         return (
             <div className="flex flex-col items-center justify-center min-h-[400px] bg-white rounded-lg shadow-sm p-8">
@@ -28,20 +28,41 @@ const FacultyCommonRoom: React.FC = () => {
 
     const fetchPosts = async () => {
         try {
-            const { data, error } = await supabase
+            // 1️⃣ Fetch main posts with author + comment count
+            const { data: postsData, error } = await supabase
                 .from('faculty_posts')
                 .select(`
                     *,
                     author:profiles!faculty_posts_author_id_fkey(*),
-                    reaction_counts:get_faculty_post_reaction_counts(id),
-                    user_reactions:has_faculty_reacted(id, ${profile.id}),
                     comments:faculty_post_comments(count)
                 `)
                 .order('pinned', { ascending: false })
                 .order('created_at', { ascending: false });
 
             if (error) throw error;
-            setPosts(data || []);
+
+            // 2️⃣ For each post, fetch reaction counts & user reactions via RPC
+            const postsWithExtras = await Promise.all(
+                (postsData || []).map(async (post) => {
+                    const { data: reactionCounts } = await supabase.rpc(
+                        'get_faculty_post_reaction_counts',
+                        { post_id: post.id }
+                    );
+
+                    const { data: userReactions } = await supabase.rpc(
+                        'has_faculty_reacted',
+                        { post_id: post.id, user_id: profile.id }
+                    );
+
+                    return {
+                        ...post,
+                        reaction_counts: reactionCounts || {},
+                        user_reactions: userReactions || {},
+                    };
+                })
+            );
+
+            setPosts(postsWithExtras);
         } catch (err) {
             console.error('Error fetching faculty posts:', err);
             setError('Failed to load faculty posts');
@@ -63,13 +84,11 @@ const FacultyCommonRoom: React.FC = () => {
 
         setSubmitting(true);
         try {
-            const { error } = await supabase
-                .from('faculty_posts')
-                .insert({
-                    title: newPostTitle.trim(),
-                    content: newPostContent.trim(),
-                    author_id: profile.id
-                });
+            const { error } = await supabase.from('faculty_posts').insert({
+                title: newPostTitle.trim(),
+                content: newPostContent.trim(),
+                author_id: profile.id,
+            });
 
             if (error) throw error;
 
@@ -88,12 +107,9 @@ const FacultyCommonRoom: React.FC = () => {
 
     const handleReaction = async (postId: number, reactionType: string) => {
         try {
-            const existingReaction = posts
-                .find(p => p.id === postId)
-                ?.user_reactions?.[reactionType];
+            const existingReaction = posts.find(p => p.id === postId)?.user_reactions?.[reactionType];
 
             if (existingReaction) {
-                // Remove reaction
                 const { error } = await supabase
                     .from('faculty_post_reactions')
                     .delete()
@@ -101,19 +117,18 @@ const FacultyCommonRoom: React.FC = () => {
 
                 if (error) throw error;
             } else {
-                // Add reaction
                 const { error } = await supabase
                     .from('faculty_post_reactions')
                     .insert({
                         post_id: postId,
                         user_id: profile.id,
-                        reaction_type: reactionType
+                        reaction_type: reactionType,
                     });
 
                 if (error) throw error;
             }
 
-            fetchPosts(); // Refresh to get updated reaction counts
+            fetchPosts();
         } catch (err) {
             console.error('Error toggling reaction:', err);
             toast.error('Failed to update reaction');
@@ -125,7 +140,7 @@ const FacultyCommonRoom: React.FC = () => {
         { type: 'heart', emoji: '❤️' },
         { type: 'celebrate', emoji: '🎉' },
         { type: 'insightful', emoji: '💡' },
-        { type: 'support', emoji: '🤝' }
+        { type: 'support', emoji: '🤝' },
     ];
 
     if (loading) return <div className="flex justify-center p-8"><Spinner size="lg" /></div>;
@@ -144,8 +159,13 @@ const FacultyCommonRoom: React.FC = () => {
             </div>
 
             <div className="space-y-6">
-                {posts.map(post => (
-                    <div key={post.id} className={`bg-white rounded-lg shadow-sm p-6 ${post.pinned ? 'border-2 border-primary' : 'border border-gray-200'}`}>
+                {posts.map((post) => (
+                    <div
+                        key={post.id}
+                        className={`bg-white rounded-lg shadow-sm p-6 ${
+                            post.pinned ? 'border-2 border-primary' : 'border border-gray-200'
+                        }`}
+                    >
                         <div className="flex items-start justify-between">
                             <div className="flex items-center space-x-3">
                                 <img
@@ -155,7 +175,9 @@ const FacultyCommonRoom: React.FC = () => {
                                 />
                                 <div>
                                     <h3 className="font-bold text-gray-900">{post.author?.name}</h3>
-                                    <p className="text-sm text-gray-500">{format(new Date(post.created_at), 'PPp')}</p>
+                                    <p className="text-sm text-gray-500">
+                                        {format(new Date(post.created_at), 'PPp')}
+                                    </p>
                                 </div>
                             </div>
                             {post.pinned && (
@@ -168,7 +190,9 @@ const FacultyCommonRoom: React.FC = () => {
                         <h2 className="text-xl font-semibold mt-4 mb-2">{post.title}</h2>
                         <div className="prose prose-sm max-w-none">
                             {post.content.split('\n').map((paragraph, idx) => (
-                                <p key={idx} className="mb-4">{paragraph}</p>
+                                <p key={idx} className="mb-4">
+                                    {paragraph}
+                                </p>
                             ))}
                         </div>
 
@@ -205,7 +229,7 @@ const FacultyCommonRoom: React.FC = () => {
                                     type="text"
                                     placeholder="Post title"
                                     value={newPostTitle}
-                                    onChange={e => setNewPostTitle(e.target.value)}
+                                    onChange={(e) => setNewPostTitle(e.target.value)}
                                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary"
                                 />
                             </div>
@@ -213,7 +237,7 @@ const FacultyCommonRoom: React.FC = () => {
                                 <textarea
                                     placeholder="Write your post content..."
                                     value={newPostContent}
-                                    onChange={e => setNewPostContent(e.target.value)}
+                                    onChange={(e) => setNewPostContent(e.target.value)}
                                     rows={6}
                                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary"
                                 />

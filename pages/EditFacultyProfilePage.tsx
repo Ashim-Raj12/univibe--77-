@@ -25,6 +25,7 @@ const EditFacultyProfilePage: React.FC = () => {
   const [title, setTitle] = useState("");
   const [department, setDepartment] = useState("");
   const [officeLocation, setOfficeLocation] = useState("");
+  const [bio, setBio] = useState("");
   const [researchInterests, setResearchInterests] = useState<string[]>([]);
   const [newResearchInterest, setNewResearchInterest] = useState("");
   const [education, setEducation] = useState<
@@ -51,6 +52,7 @@ const EditFacultyProfilePage: React.FC = () => {
         setTitle(data.faculty_title || "");
         setDepartment(data.department || "");
         setOfficeLocation(data.office_location || "");
+        setBio(data.bio || "");
         setResearchInterests(data.research_interests || []);
         setEducation(data.education_background || []);
         setPublications(data.publications || []);
@@ -92,7 +94,7 @@ const EditFacultyProfilePage: React.FC = () => {
 
     if (uploadError) throw uploadError;
 
-    return `https://your-supabase-url.supabase.co/storage/v1/object/public/avatars/${filePath}`;
+    return `https://jcjkomunegqtjbamfila.supabase.co/storage/v1/object/public/avatars/${filePath}`;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -114,6 +116,7 @@ const EditFacultyProfilePage: React.FC = () => {
           faculty_title: title,
           department,
           office_location: officeLocation,
+          bio,
           research_interests: researchInterests,
           education_background: education,
           publications,
@@ -256,6 +259,23 @@ const EditFacultyProfilePage: React.FC = () => {
               className="w-full px-4 py-3 bg-transparent border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary text-text-heading placeholder:text-text-muted transition-all duration-300"
             />
           </div>
+        </div>
+
+        <div>
+          <label
+            className="block text-sm font-medium text-text-body mb-2"
+            htmlFor="bio"
+          >
+            Bio
+          </label>
+          <textarea
+            id="bio"
+            value={bio}
+            onChange={(e) => setBio(e.target.value)}
+            className="w-full px-4 py-3 bg-transparent border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary text-text-heading placeholder:text-text-muted transition-all duration-300 resize-none"
+            placeholder="Tell us about yourself..."
+            rows={3}
+          />
         </div>
 
         <h3 className="text-lg font-semibold text-text-heading mb-4 border-t pt-6">

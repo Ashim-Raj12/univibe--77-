@@ -54,7 +54,7 @@ export const getHomePathForProfile = (profile: Profile | null): string => {
     case "parent":
       return "/common-room";
     case "faculty":
-      return "/college-hub";
+      return "/faculty-common-room";
     default:
       return "/";
   }
