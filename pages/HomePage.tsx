@@ -61,6 +61,7 @@ const HomePage: React.FC = () => {
           "id, created_at, content, image_url, user_id, community_id, location, profiles!inner(*), likes(*), comments!inner(count)"
         )
         .is("community_id", null)
+        .neq("profiles.enrollment_status", "faculty")
         .order("created_at", { ascending: false })
         .range(from, to);
 
@@ -77,7 +78,7 @@ const HomePage: React.FC = () => {
         console.error("Error fetching posts:", error);
         setError(error.message);
       } else if (data) {
-        const postsWithProfiles = data as PostWithProfile[];
+        const postsWithProfiles = data as unknown as PostWithProfile[];
         postsWithProfiles.forEach((post) => {
           if (post.profiles) {
             profilesCache.set(post.profiles);
@@ -156,9 +157,9 @@ const HomePage: React.FC = () => {
       }
     };
 
-    const handlePostDelete = (payload: { old: { id: number } }) => {
+    const handlePostDelete = (payload: any) => {
       setPosts((currentPosts) =>
-        currentPosts.filter((p) => p.id !== payload.old.id)
+        currentPosts.filter((p) => p.id !== payload.old?.id)
       );
     };
 
@@ -206,7 +207,7 @@ const HomePage: React.FC = () => {
       .on(
         "postgres_changes",
         { event: "DELETE", schema: "public", table: "posts" },
-        handlePostDelete
+        (payload) => handlePostDelete(payload)
       )
       .subscribe();
 

@@ -1,269 +1,330 @@
-import React, { useState, useEffect } from 'react';
-import { supabase } from '../../services/supabase';
-import { FacultyPost } from '../../types/faculty';
-import { useAuth } from '../../hooks/useAuth';
-import { toast } from '../../components/Toast';
-import Spinner from '../../components/Spinner';
-import { format } from 'date-fns';
+import React, { useState, useEffect, useCallback } from "react";
+import { supabase } from "../../services/supabase";
+import { FacultyPost } from "../../types/faculty";
+import { useAuth } from "../../hooks/useAuth";
+import { toast } from "../../components/Toast";
+import Spinner from "../../components/Spinner";
+import { format } from "date-fns";
+import PostCard from "../../components/PostCard";
+import PostCardSkeleton from "../../components/PostCardSkeleton";
+import PostForm from "../../components/PostForm";
+
+const POSTS_PER_PAGE = 10;
 
 const FacultyCommonRoom: React.FC = () => {
-    const { profile } = useAuth();
-    const [posts, setPosts] = useState<FacultyPost[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-    const [newPostTitle, setNewPostTitle] = useState('');
-    const [newPostContent, setNewPostContent] = useState('');
-    const [submitting, setSubmitting] = useState(false);
+  const { profile } = useAuth();
+  const [posts, setPosts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
 
-    // Restrict non-faculty users
-    if (profile?.enrollment_status !== 'faculty') {
-        return (
-            <div className="flex flex-col items-center justify-center min-h-[400px] bg-white rounded-lg shadow-sm p-8">
-                <h2 className="text-2xl font-bold text-gray-800 mb-2">Faculty Access Only</h2>
-                <p className="text-gray-600">This area is restricted to faculty members.</p>
-            </div>
+  // Restrict non-faculty users
+  if (profile?.enrollment_status !== "faculty") {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] bg-white rounded-lg shadow-sm p-8">
+        <h2 className="text-2xl font-bold text-gray-800 mb-2">
+          Faculty Access Only
+        </h2>
+        <p className="text-gray-600">
+          This area is restricted to faculty members.
+        </p>
+      </div>
+    );
+  }
+
+  const fetchPosts = useCallback(
+    async (isNew = false) => {
+      if (isNew) {
+        setLoading(true);
+        setPage(0);
+        setPosts([]);
+      } else {
+        setLoadingMore(true);
+      }
+      setError(null);
+
+      const currentPage = isNew ? 0 : page;
+      const from = currentPage * POSTS_PER_PAGE;
+      const to = from + POSTS_PER_PAGE - 1;
+
+      let query = supabase
+        .from("posts")
+        .select(
+          "id, created_at, content, image_url, user_id, community_id, location, profiles!inner(*), likes(*), comments!inner(count)"
+        )
+        .is("community_id", null)
+        .eq("profiles.enrollment_status", "faculty")
+        .order("created_at", { ascending: false })
+        .range(from, to);
+
+      const { data, error } = await query;
+
+      if (error) {
+        console.error("Error fetching posts:", error);
+        setError(error.message);
+      } else if (data) {
+        const authorIds = [...new Set((data as any[]).map((p) => p.user_id))];
+        let postsWithProStatus = data as any[];
+
+        if (authorIds.length > 0) {
+          const { data: proSubs } = await supabase
+            .from("user_subscriptions")
+            .select("user_id, subscriptions:subscription_id(name)")
+            .in("user_id", authorIds)
+            .eq("status", "active");
+
+          const proUserIds = new Set(
+            (proSubs || [])
+              .filter(
+                (s) => (s.subscriptions as any)?.name?.toUpperCase() === "PRO"
+              )
+              .map((s) => s.user_id)
+          );
+
+          postsWithProStatus = (data as any[]).map((post) => ({
+            ...post,
+            profiles: {
+              ...post.profiles,
+              has_pro_badge: proUserIds.has(post.user_id),
+            },
+          }));
+        }
+
+        if (isNew) {
+          setPosts(postsWithProStatus);
+        } else {
+          setPosts((prev) => {
+            const existingIds = new Set(prev.map((p) => p.id));
+            const newPosts = postsWithProStatus.filter(
+              (p: any) => !existingIds.has(p.id)
+            );
+            return [...prev, ...newPosts];
+          });
+        }
+
+        if (data.length < POSTS_PER_PAGE) {
+          setHasMore(false);
+        } else {
+          setHasMore(true);
+          setPage((prev) => prev + 1);
+        }
+      }
+
+      setLoading(false);
+      setLoadingMore(false);
+    },
+    [page]
+  );
+
+  useEffect(() => {
+    fetchPosts();
+  }, []);
+
+  // Effect for initial data load
+  useEffect(() => {
+    fetchPosts(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Effect for real-time subscriptions
+  useEffect(() => {
+    const handleRealtimeInsert = async (payload: { new: any }) => {
+      // Fetch the complete post data with profile information
+      const { data, error } = await supabase
+        .from("posts")
+        .select(
+          "id, created_at, content, image_url, user_id, community_id, location, profiles!inner(*), likes(*), comments!inner(count)"
+        )
+        .eq("id", payload.new.id)
+        .single();
+
+      // Only handle posts created by faculty
+      if (
+        data &&
+        !error &&
+        (data.profiles as any)?.enrollment_status === "faculty"
+      ) {
+        setPosts((currentPosts) => {
+          const exists = currentPosts.some((p) => p.id === data.id);
+          if (exists) return currentPosts;
+          return [data as unknown as any, ...currentPosts];
+        });
+      }
+    };
+
+    const handleRealtimeUpdate = async (payload: { new: any }) => {
+      const { data, error } = await supabase
+        .from("posts")
+        .select(
+          "id, created_at, content, image_url, user_id, community_id, location, profiles!inner(*), likes(*), comments!inner(count)"
+        )
+        .eq("id", payload.new.id)
+        .single();
+
+      // Only handle posts created by faculty
+      if (
+        data &&
+        !error &&
+        (data.profiles as any)?.enrollment_status === "faculty"
+      ) {
+        setPosts((currentPosts) =>
+          currentPosts.map((post) =>
+            post.id === data.id ? (data as unknown as any) : post
+          )
         );
+      }
+    };
+
+    const handlePostDelete = (payload: any) => {
+      setPosts((currentPosts) =>
+        currentPosts.filter((p) => p.id !== payload.old?.id)
+      );
+    };
+
+    const handleNewPostCreated = (event: CustomEvent<any>) => {
+      // Add the new post from PostForm to the top of the list
+      setPosts((currentPosts) => [event.detail, ...currentPosts]);
+    };
+
+    // Listen for custom event from PostForm
+    window.addEventListener(
+      "new-post-created",
+      handleNewPostCreated as EventListener
+    );
+
+    const channel = supabase.channel("faculty-posts-realtime");
+    channel
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "posts",
+        },
+        (payload) => {
+          // Only handle public posts (no community_id)
+          if (payload.new.community_id === null) {
+            handleRealtimeInsert(payload);
+          }
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "posts",
+        },
+        (payload) => {
+          // Only handle public posts (no community_id)
+          if (payload.new.community_id === null) {
+            handleRealtimeUpdate(payload);
+          }
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "DELETE", schema: "public", table: "posts" },
+        (payload) => handlePostDelete(payload)
+      )
+      .subscribe();
+
+    return () => {
+      window.removeEventListener(
+        "new-post-created",
+        handleNewPostCreated as EventListener
+      );
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  const handlePostDeleted = (postId: number) => {
+    setPosts(posts.filter((p) => p.id !== postId));
+  };
+
+  const handlePostUpdated = useCallback(() => {
+    fetchPosts(true);
+  }, [fetchPosts]);
+
+  const renderContent = () => {
+    if (loading) {
+      return (
+        <div className="space-y-6">
+          <PostCardSkeleton />
+          <PostCardSkeleton />
+          <PostCardSkeleton />
+        </div>
+      );
     }
 
-    const fetchPosts = async () => {
-        try {
-            // 1️⃣ Fetch main posts with author + comment count
-            const { data: postsData, error } = await supabase
-                .from('faculty_posts')
-                .select(`
-                    *,
-                    author:profiles!faculty_posts_author_id_fkey(*),
-                    comments:faculty_post_comments(count)
-                `)
-                .order('pinned', { ascending: false })
-                .order('created_at', { ascending: false });
+    if (error) {
+      return <p className="text-center text-red-500">{error}</p>;
+    }
 
-            if (error) throw error;
-
-            // 2️⃣ For each post, fetch reaction counts & user reactions via RPC
-            const postsWithExtras = await Promise.all(
-                (postsData || []).map(async (post) => {
-                    const { data: reactionCounts } = await supabase.rpc(
-                        'get_faculty_post_reaction_counts',
-                        { post_id: post.id }
-                    );
-
-                    const { data: userReactions } = await supabase.rpc(
-                        'has_faculty_reacted',
-                        { post_id: post.id, user_id: profile.id }
-                    );
-
-                    return {
-                        ...post,
-                        reaction_counts: reactionCounts || {},
-                        user_reactions: userReactions || {},
-                    };
-                })
-            );
-
-            setPosts(postsWithExtras);
-        } catch (err) {
-            console.error('Error fetching faculty posts:', err);
-            setError('Failed to load faculty posts');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        fetchPosts();
-    }, []);
-
-    const handleCreatePost = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!newPostTitle.trim() || !newPostContent.trim()) {
-            toast.error('Please fill in both title and content');
-            return;
-        }
-
-        setSubmitting(true);
-        try {
-            const { error } = await supabase.from('faculty_posts').insert({
-                title: newPostTitle.trim(),
-                content: newPostContent.trim(),
-                author_id: profile.id,
-            });
-
-            if (error) throw error;
-
-            toast.success('Post created successfully');
-            setNewPostTitle('');
-            setNewPostContent('');
-            setIsCreateModalOpen(false);
-            fetchPosts();
-        } catch (err) {
-            console.error('Error creating post:', err);
-            toast.error('Failed to create post');
-        } finally {
-            setSubmitting(false);
-        }
-    };
-
-    const handleReaction = async (postId: number, reactionType: string) => {
-        try {
-            const existingReaction = posts.find(p => p.id === postId)?.user_reactions?.[reactionType];
-
-            if (existingReaction) {
-                const { error } = await supabase
-                    .from('faculty_post_reactions')
-                    .delete()
-                    .match({ post_id: postId, user_id: profile.id, reaction_type: reactionType });
-
-                if (error) throw error;
-            } else {
-                const { error } = await supabase
-                    .from('faculty_post_reactions')
-                    .insert({
-                        post_id: postId,
-                        user_id: profile.id,
-                        reaction_type: reactionType,
-                    });
-
-                if (error) throw error;
-            }
-
-            fetchPosts();
-        } catch (err) {
-            console.error('Error toggling reaction:', err);
-            toast.error('Failed to update reaction');
-        }
-    };
-
-    const reactionTypes = [
-        { type: 'like', emoji: '👍' },
-        { type: 'heart', emoji: '❤️' },
-        { type: 'celebrate', emoji: '🎉' },
-        { type: 'insightful', emoji: '💡' },
-        { type: 'support', emoji: '🤝' },
-    ];
-
-    if (loading) return <div className="flex justify-center p-8"><Spinner size="lg" /></div>;
-    if (error) return <div className="p-4 text-red-600 bg-red-50 rounded-lg">{error}</div>;
+    if (posts.length === 0) {
+      return (
+        <p className="text-center text-gray-500 bg-card p-10 rounded-2xl border border-border">
+          No posts found. Try adjusting your filters!
+        </p>
+      );
+    }
 
     return (
-        <div className="max-w-4xl mx-auto py-8 px-4">
-            <div className="flex justify-between items-center mb-6">
-                <h1 className="text-2xl font-bold text-gray-900">Faculty Common Room</h1>
-                <button
-                    onClick={() => setIsCreateModalOpen(true)}
-                    className="bg-primary text-white px-4 py-2 rounded-lg font-medium hover:bg-primary-dark transition-colors"
-                >
-                    Create Post
-                </button>
-            </div>
-
-            <div className="space-y-6">
-                {posts.map((post) => (
-                    <div
-                        key={post.id}
-                        className={`bg-white rounded-lg shadow-sm p-6 ${
-                            post.pinned ? 'border-2 border-primary' : 'border border-gray-200'
-                        }`}
-                    >
-                        <div className="flex items-start justify-between">
-                            <div className="flex items-center space-x-3">
-                                <img
-                                    src={post.author?.avatar_url || '/default-avatar.png'}
-                                    alt={post.author?.name}
-                                    className="w-10 h-10 rounded-full"
-                                />
-                                <div>
-                                    <h3 className="font-bold text-gray-900">{post.author?.name}</h3>
-                                    <p className="text-sm text-gray-500">
-                                        {format(new Date(post.created_at), 'PPp')}
-                                    </p>
-                                </div>
-                            </div>
-                            {post.pinned && (
-                                <span className="bg-primary/10 text-primary text-xs px-2 py-1 rounded-full font-medium">
-                                    📌 Pinned
-                                </span>
-                            )}
-                        </div>
-
-                        <h2 className="text-xl font-semibold mt-4 mb-2">{post.title}</h2>
-                        <div className="prose prose-sm max-w-none">
-                            {post.content.split('\n').map((paragraph, idx) => (
-                                <p key={idx} className="mb-4">
-                                    {paragraph}
-                                </p>
-                            ))}
-                        </div>
-
-                        <div className="mt-4 pt-4 border-t">
-                            <div className="flex flex-wrap gap-2">
-                                {reactionTypes.map(({ type, emoji }) => (
-                                    <button
-                                        key={type}
-                                        onClick={() => handleReaction(post.id, type)}
-                                        className={`inline-flex items-center space-x-1 px-2 py-1 rounded-full text-sm ${
-                                            post.user_reactions?.[type]
-                                                ? 'bg-primary/10 text-primary'
-                                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                        }`}
-                                    >
-                                        <span>{emoji}</span>
-                                        <span>{post.reaction_counts?.[type] || 0}</span>
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-                ))}
-            </div>
-
-            {/* Create Post Modal */}
-            {isCreateModalOpen && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-                    <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full p-6">
-                        <h2 className="text-xl font-bold mb-4">Create New Post</h2>
-                        <form onSubmit={handleCreatePost} className="space-y-4">
-                            <div>
-                                <input
-                                    type="text"
-                                    placeholder="Post title"
-                                    value={newPostTitle}
-                                    onChange={(e) => setNewPostTitle(e.target.value)}
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary"
-                                />
-                            </div>
-                            <div>
-                                <textarea
-                                    placeholder="Write your post content..."
-                                    value={newPostContent}
-                                    onChange={(e) => setNewPostContent(e.target.value)}
-                                    rows={6}
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary"
-                                />
-                            </div>
-                            <div className="flex justify-end space-x-3">
-                                <button
-                                    type="button"
-                                    onClick={() => setIsCreateModalOpen(false)}
-                                    className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    type="submit"
-                                    disabled={submitting}
-                                    className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors disabled:bg-gray-400"
-                                >
-                                    {submitting ? 'Creating...' : 'Create Post'}
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
-        </div>
+      <div className="space-y-6">
+        {posts.map((post) => (
+          <PostCard
+            key={post.id}
+            post={post}
+            onPostDeleted={handlePostDeleted}
+            onPostUpdated={handlePostUpdated}
+          />
+        ))}
+      </div>
     );
+  };
+
+  if (loading)
+    return (
+      <div className="flex justify-center p-8">
+        <Spinner size="lg" />
+      </div>
+    );
+  if (error)
+    return <div className="p-4 text-red-600 bg-red-50 rounded-lg">{error}</div>;
+
+  return (
+    <div className="max-w-3xl mx-auto space-y-6">
+      <h1 className="text-3xl font-bold text-text-heading">
+        Welcome to the Faculty Common Room,{" "}
+        {profile?.name ? profile.name.split(" ")[0] : "User"}!
+      </h1>
+
+      <div className="bg-card rounded-2xl shadow-soft border border-border">
+        <PostForm
+          onNewPost={() => {
+            // After submitting a new post, trigger a refetch for instant feedback.
+            setTimeout(() => fetchPosts(true), 250);
+          }}
+        />
+      </div>
+
+      {renderContent()}
+
+      {!loading && posts.length > 0 && hasMore && (
+        <div className="text-center">
+          <button
+            onClick={() => fetchPosts()}
+            disabled={loadingMore}
+            className="bg-primary text-white px-6 py-2 rounded-xl hover:bg-primary-focus transition-all duration-300 disabled:opacity-50 flex items-center justify-center min-w-[150px] font-semibold shadow-soft hover:shadow-soft-md active:animate-press mx-auto"
+          >
+            {loadingMore ? <Spinner size="sm" /> : "Load More"}
+          </button>
+        </div>
+      )}
+    </div>
+  );
 };
 
 export default FacultyCommonRoom;

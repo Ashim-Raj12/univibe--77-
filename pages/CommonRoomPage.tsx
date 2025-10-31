@@ -40,6 +40,7 @@ const CommonRoomPage: React.FC = () => {
           "id, created_at, content, image_url, user_id, community_id, location, profiles!inner(*), likes(*), comments!inner(count)"
         )
         .is("community_id", null) // Fetch only posts not in a community
+        .neq("profiles.enrollment_status", "faculty")
         .order("created_at", { ascending: false })
         .range(from, to);
 
@@ -50,9 +51,11 @@ const CommonRoomPage: React.FC = () => {
         setError(error.message);
       } else if (data) {
         const authorIds = [
-          ...new Set((data as PostWithProfile[]).map((p) => p.user_id)),
+          ...new Set(
+            (data as unknown as PostWithProfile[]).map((p) => p.user_id)
+          ),
         ];
-        let postsWithProStatus = data as PostWithProfile[];
+        let postsWithProStatus = data as unknown as PostWithProfile[];
 
         if (authorIds.length > 0) {
           const { data: proSubs } = await supabase
@@ -63,17 +66,21 @@ const CommonRoomPage: React.FC = () => {
 
           const proUserIds = new Set(
             (proSubs || [])
-              .filter((s) => s.subscriptions?.name?.toUpperCase() === "PRO")
+              .filter(
+                (s) => (s.subscriptions as any)?.name?.toUpperCase() === "PRO"
+              )
               .map((s) => s.user_id)
           );
 
-          postsWithProStatus = (data as PostWithProfile[]).map((post) => ({
-            ...post,
-            profiles: {
-              ...post.profiles,
-              has_pro_badge: proUserIds.has(post.user_id),
-            },
-          }));
+          postsWithProStatus = (data as unknown as PostWithProfile[]).map(
+            (post) => ({
+              ...post,
+              profiles: {
+                ...post.profiles,
+                has_pro_badge: proUserIds.has(post.user_id),
+              },
+            })
+          );
         }
 
         if (isNew) {
@@ -115,8 +122,8 @@ const CommonRoomPage: React.FC = () => {
       fetchPosts(true);
     };
 
-    const handlePostDelete = (payload: { old: { id: number } }) => {
-      setPosts((current) => current.filter((p) => p.id !== payload.old.id));
+    const handlePostDelete = (payload: any) => {
+      setPosts((current) => current.filter((p) => p.id !== payload.old?.id));
     };
 
     const channel = supabase.channel("common-room-posts-realtime");
@@ -144,7 +151,7 @@ const CommonRoomPage: React.FC = () => {
       .on(
         "postgres_changes",
         { event: "DELETE", schema: "public", table: "posts" },
-        handlePostDelete
+        (payload) => handlePostDelete(payload)
       )
       .subscribe();
 
