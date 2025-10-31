@@ -27,6 +27,9 @@ const EditFacultyProfilePage = lazy(
 const FacultyProfilePage = lazy(() => import("./pages/FacultyProfilePage"));
 const FacultyListPage = lazy(() => import("./pages/FacultyListPage"));
 const FacultyLoginPage = lazy(() => import("./pages/FacultyLoginPage"));
+const FacultyComingSoonPage = lazy(
+  () => import("./pages/FacultyComingSoonPage")
+);
 const ParentProfilePage = lazy(() => import("./pages/ParentProfilePage"));
 const DirectoryPage = lazy(() => import("./pages/DirectoryPage"));
 const SuggestionsPage = lazy(() => import("./pages/SuggestionsPage"));
@@ -160,6 +163,10 @@ function App() {
                 <Route path="/" element={<LandingPage />} />
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/faculty-login" element={<FacultyLoginPage />} />
+                <Route
+                  path="/faculty-coming-soon"
+                  element={<FacultyComingSoonPage />}
+                />
                 <Route path="/register" element={<RegisterPage />} />
                 <Route
                   path="/forgot-password"

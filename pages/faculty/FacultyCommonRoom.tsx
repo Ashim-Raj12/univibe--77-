@@ -8,6 +8,7 @@ import { format } from "date-fns";
 import PostCard from "../../components/PostCard";
 import PostCardSkeleton from "../../components/PostCardSkeleton";
 import PostForm from "../../components/PostForm";
+import SuggestedFaculty from "../../components/SuggestedFaculty";
 
 const POSTS_PER_PAGE = 10;
 
@@ -295,35 +296,60 @@ const FacultyCommonRoom: React.FC = () => {
     return <div className="p-4 text-red-600 bg-red-50 rounded-lg">{error}</div>;
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
-      <h1 className="text-3xl font-bold text-text-heading">
-        Welcome to the Faculty Common Room,{" "}
-        {profile?.name ? profile.name.split(" ")[0] : "User"}!
-      </h1>
+    <>
+      <div className="grid lg:grid-cols-3 gap-8 items-start">
+        <div className="lg:col-span-2 space-y-6">
+          <h1 className="text-3xl font-bold text-text-heading">
+            Welcome to the Faculty Common Room,{" "}
+            {profile?.name ? profile.name.split(" ")[0] : "User"}!
+          </h1>
 
-      <div className="bg-card rounded-2xl shadow-soft border border-border">
-        <PostForm
-          onNewPost={() => {
-            // After submitting a new post, trigger a refetch for instant feedback.
-            setTimeout(() => fetchPosts(true), 250);
-          }}
-        />
-      </div>
+          <div className="bg-card rounded-2xl shadow-soft border border-border">
+            <PostForm
+              onNewPost={() => {
+                // After submitting a new post, trigger a refetch for instant feedback.
+                setTimeout(() => fetchPosts(true), 250);
+              }}
+            />
+          </div>
 
-      {renderContent()}
+          {renderContent()}
 
-      {!loading && posts.length > 0 && hasMore && (
-        <div className="text-center">
-          <button
-            onClick={() => fetchPosts()}
-            disabled={loadingMore}
-            className="bg-primary text-white px-6 py-2 rounded-xl hover:bg-primary-focus transition-all duration-300 disabled:opacity-50 flex items-center justify-center min-w-[150px] font-semibold shadow-soft hover:shadow-soft-md active:animate-press mx-auto"
-          >
-            {loadingMore ? <Spinner size="sm" /> : "Load More"}
-          </button>
+          {!loading && posts.length > 0 && hasMore && (
+            <div className="text-center">
+              <button
+                onClick={() => fetchPosts()}
+                disabled={loadingMore}
+                className="bg-primary text-white px-6 py-2 rounded-xl hover:bg-primary-focus transition-all duration-300 disabled:opacity-50 flex items-center justify-center min-w-[150px] font-semibold shadow-soft hover:shadow-soft-md active:animate-press mx-auto"
+              >
+                {loadingMore ? <Spinner size="sm" /> : "Load More"}
+              </button>
+            </div>
+          )}
         </div>
-      )}
-    </div>
+        <aside className="hidden lg:block space-y-6 sticky top-24">
+          {profile && (
+            <div className="bg-card p-4 rounded-2xl shadow-soft text-center border border-border">
+              <img
+                src={
+                  profile.avatar_url ||
+                  `https://avatar.vercel.sh/${profile.id}.png`
+                }
+                alt={profile.name || ""}
+                className="w-20 h-20 rounded-full mx-auto mb-3 object-cover border-4 border-slate-100"
+              />
+              <h2 className="font-bold text-xl text-text-heading">
+                {profile.name}
+              </h2>
+              <p className="text-sm text-text-body">
+                {profile.faculty_title || "Faculty"}
+              </p>
+            </div>
+          )}
+          <SuggestedFaculty />
+        </aside>
+      </div>
+    </>
   );
 };
 

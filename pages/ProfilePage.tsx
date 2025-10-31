@@ -54,7 +54,7 @@ export const getHomePathForProfile = (profile: Profile | null): string => {
     case "parent":
       return "/common-room";
     case "faculty":
-      return "/faculty-common-room";
+      return "/faculty-coming-soon";
     default:
       return "/";
   }
@@ -598,15 +598,6 @@ const ProfilePage: React.FC = () => {
 
   return (
     <>
-      {isIncompleteProfile && (
-        <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800 p-4 rounded-r-lg shadow-soft mb-6 animate-fade-in-up">
-          <p className="font-bold">Welcome to UniVibe!</p>
-          <p>
-            Please complete your profile to unlock all features and start
-            exploring. Click "Edit Profile" to get started.
-          </p>
-        </div>
-      )}
       <div className="bg-card p-6 rounded-lg shadow-sm border border-slate-200/80 mb-6">
         <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
           <div className="relative group flex-shrink-0">

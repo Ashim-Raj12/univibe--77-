@@ -12,6 +12,16 @@ interface FacultyProfile {
   avatar_url: string;
   faculty_title: string;
   department: string;
+  bio: string;
+  college: string;
+  state: string;
+  home_town: string;
+  gender: string;
+  course: string;
+  hobbies_interests: string[];
+  linkedin_url: string;
+  twitter_url: string;
+  github_url: string;
   research_interests: string[];
   education_background: {
     degree: string;
@@ -22,6 +32,10 @@ interface FacultyProfile {
   office_location: string;
   profile_visibility: boolean;
   verified: boolean;
+  consultation_available?: boolean;
+  consultation_rate?: number;
+  consultation_duration?: number;
+  expertise_areas?: string[];
 }
 
 interface OfficeHours {
@@ -142,33 +156,6 @@ const FacultyProfilePage: React.FC = () => {
 
   return (
     <div className="max-w-4xl mx-auto p-4 space-y-6">
-      {/* Prompt banner for owners if profile is hidden or consultation details are incomplete */}
-      {isSelf &&
-        (!facultyProfile.profile_visibility ||
-          !facultyProfile.consultation_available ||
-          !facultyProfile.consultation_rate) && (
-          <div className="bg-yellow-50 border-l-4 border-yellow-300 p-4 rounded-md">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-yellow-800 font-medium">
-                  Your profile is not fully visible to students yet.
-                </p>
-                <p className="text-sm text-yellow-700 mt-1">
-                  Publish your profile and add consultation pricing so students
-                  can find and book you.
-                </p>
-              </div>
-              <div className="ml-4">
-                <button
-                  onClick={() => navigate("/edit-faculty-profile")}
-                  className="px-3 py-1 bg-primary text-white rounded-md text-sm"
-                >
-                  Complete Profile
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
       {/* Profile Header */}
       <div className="bg-white rounded-lg shadow-sm p-6 flex items-start justify-between">
         <div className="flex items-start space-x-4">
@@ -190,6 +177,23 @@ const FacultyProfilePage: React.FC = () => {
             <p className="text-gray-600">{facultyProfile.department}</p>
             {facultyProfile.bio && (
               <p className="text-gray-700 mt-2">{facultyProfile.bio}</p>
+            )}
+            {facultyProfile.college && (
+              <p className="text-gray-600 mt-1">{facultyProfile.college}</p>
+            )}
+            {facultyProfile.state && (
+              <p className="text-gray-600">{facultyProfile.state}</p>
+            )}
+            {facultyProfile.home_town && (
+              <p className="text-gray-600">{facultyProfile.home_town}</p>
+            )}
+            {facultyProfile.gender && (
+              <p className="text-gray-600 capitalize">
+                {facultyProfile.gender}
+              </p>
+            )}
+            {facultyProfile.course && (
+              <p className="text-gray-600">{facultyProfile.course}</p>
             )}
           </div>
         </div>
@@ -282,6 +286,27 @@ const FacultyProfilePage: React.FC = () => {
         </div>
       </div>
 
+      {/* Hobbies & Interests */}
+      <div className="bg-white rounded-lg shadow-sm p-6">
+        <h2 className="text-xl font-semibold text-gray-900 mb-4">
+          Hobbies & Interests
+        </h2>
+        <div className="flex flex-wrap gap-2">
+          {facultyProfile.hobbies_interests?.map((hobby, index) => (
+            <span
+              key={index}
+              className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm"
+            >
+              {hobby}
+            </span>
+          ))}
+          {(!facultyProfile.hobbies_interests ||
+            facultyProfile.hobbies_interests.length === 0) && (
+            <p className="text-gray-500">No hobbies or interests listed</p>
+          )}
+        </div>
+      </div>
+
       {/* Publications */}
       <div className="bg-white rounded-lg shadow-sm p-6">
         <h2 className="text-xl font-semibold text-gray-900 mb-4">
@@ -305,10 +330,51 @@ const FacultyProfilePage: React.FC = () => {
         <h2 className="text-xl font-semibold text-gray-900 mb-4">
           Contact Information
         </h2>
-        <p className="text-gray-700">
-          <span className="font-medium">Office Location:</span>{" "}
-          {facultyProfile.office_location}
-        </p>
+        <div className="space-y-2">
+          <p className="text-gray-700">
+            <span className="font-medium">Office Location:</span>{" "}
+            {facultyProfile.office_location}
+          </p>
+          {facultyProfile.linkedin_url && (
+            <p className="text-gray-700">
+              <span className="font-medium">LinkedIn:</span>{" "}
+              <a
+                href={facultyProfile.linkedin_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:underline"
+              >
+                {facultyProfile.linkedin_url}
+              </a>
+            </p>
+          )}
+          {facultyProfile.twitter_url && (
+            <p className="text-gray-700">
+              <span className="font-medium">Twitter:</span>{" "}
+              <a
+                href={facultyProfile.twitter_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:underline"
+              >
+                {facultyProfile.twitter_url}
+              </a>
+            </p>
+          )}
+          {facultyProfile.github_url && (
+            <p className="text-gray-700">
+              <span className="font-medium">GitHub:</span>{" "}
+              <a
+                href={facultyProfile.github_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:underline"
+              >
+                {facultyProfile.github_url}
+              </a>
+            </p>
+          )}
+        </div>
       </div>
 
       {/* Consultation Section */}

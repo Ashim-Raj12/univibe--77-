@@ -8,6 +8,7 @@ import { useAuth } from "../hooks/useAuth";
 import { toast } from "../components/Toast";
 import WebsiteLogo from "../components/WebsiteLogo";
 import AuthLayout from "../components/AuthLayout";
+import FacultyComingSoonPage from "./FacultyComingSoonPage";
 
 const UserTypeButton: React.FC<{
   onClick: () => void;
@@ -52,16 +53,19 @@ const performUsernameCheck = async (
   if (!/^[a-z0-9_]{3,15}$/.test(username)) {
     return "3–15 lowercase letters, numbers, or underscores.";
   }
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("profiles")
     .select("id")
-    .eq("username", username)
-    .single();
-  return data ? "Username is already taken." : null;
+    .eq("username", username);
+  if (error) {
+    console.error("Error checking username:", error);
+    return "Error checking username availability.";
+  }
+  return data && data.length > 0 ? "Username is already taken." : null;
 };
 
 const RegisterPage: React.FC = () => {
-  const { session, loading: authLoading } = useAuth();
+  const { session, loading: authLoading, profile } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
@@ -106,9 +110,14 @@ const RegisterPage: React.FC = () => {
 
   useEffect(() => {
     if (!authLoading && session) {
-      navigate("/home", { replace: true });
+      // Redirect faculty users to coming soon page, others to home
+      if (profile?.enrollment_status === "faculty") {
+        navigate("/faculty-coming-soon", { replace: true });
+      } else {
+        navigate("/home", { replace: true });
+      }
     }
-  }, [session, authLoading, navigate]);
+  }, [session, authLoading, navigate, profile]);
 
   useEffect(() => {
     const fetchColleges = async () => {
@@ -202,6 +211,13 @@ const RegisterPage: React.FC = () => {
     setLoading(true);
     setError(null);
 
+    // For faculty, don't create auth account, just show coming soon page
+    if (formData.userType === "faculty") {
+      setIsSuccess(true);
+      setLoading(false);
+      return;
+    }
+
     const {
       data: { user },
       error: signUpError,
@@ -273,6 +289,11 @@ const RegisterPage: React.FC = () => {
     "w-full px-4 py-3 bg-dark-card border-2 border-transparent rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary text-text-heading placeholder:text-text-muted transition-all duration-300";
 
   if (isSuccess) {
+    if (formData.userType === "faculty") {
+      // For faculty, don't log them in, just show coming soon page
+      return <FacultyComingSoonPage />;
+    }
+
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4 text-center">
         <div className="bg-card p-8 rounded-2xl shadow-soft-md border border-border">
@@ -282,35 +303,12 @@ const RegisterPage: React.FC = () => {
           <p className="text-text-body mt-2">
             We’ve sent a verification link to <strong>{formData.email}</strong>.
           </p>
-          {formData.userType === "faculty" ? (
-            <div className="mt-6 space-y-3">
-              <p className="text-text-body">
-                Since you registered as faculty, you can complete your faculty
-                profile now.
-              </p>
-              <div className="flex gap-3 justify-center">
-                <Link
-                  to="/edit-faculty-profile"
-                  className="inline-block bg-primary text-white px-6 py-2 rounded-lg hover:bg-primary-focus transition-colors font-semibold"
-                >
-                  Complete Faculty Profile
-                </Link>
-                <Link
-                  to="/login"
-                  className="inline-block bg-white border border-border px-6 py-2 rounded-lg hover:bg-gray-50 transition-colors font-semibold"
-                >
-                  Sign In
-                </Link>
-              </div>
-            </div>
-          ) : (
-            <Link
-              to="/login"
-              className="inline-block mt-6 bg-primary text-white px-6 py-2 rounded-lg hover:bg-primary-focus transition-colors font-semibold"
-            >
-              Back to Login
-            </Link>
-          )}
+          <Link
+            to="/login"
+            className="inline-block mt-6 bg-primary text-white px-6 py-2 rounded-lg hover:bg-primary-focus transition-colors font-semibold"
+          >
+            Back to Login
+          </Link>
         </div>
       </div>
     );

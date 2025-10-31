@@ -43,9 +43,9 @@ const ProfileCompletionAlert: React.FC = () => {
   if (!isProfileIncomplete()) return null;
 
   const getEditLink = () => {
-    return profile.enrollment_status === "parent"
-      ? "/edit-parent-profile"
-      : "/edit-profile";
+    if (profile.enrollment_status === "parent") return "/edit-parent-profile";
+    if (profile.enrollment_status === "faculty") return "/edit-faculty-profile";
+    return "/edit-profile";
   };
 
   return (
